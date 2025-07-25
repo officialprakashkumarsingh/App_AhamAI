@@ -200,6 +200,35 @@ class AgentService extends ChangeNotifier {
     List<String> toolsNeeded = [];
     Map<String, dynamic> toolParams = {};
 
+    // Determine if screenshot is needed - improved pattern matching
+    if (message.contains('screenshot') || message.contains('capture') ||
+        message.contains('take a screenshot') || message.contains('take screenshot') ||
+        message.contains('show me') && message.contains('.com')) {
+      
+      // Extract URL - improved URL detection
+      final urlPattern = RegExp(r'(?:https?://)?(?:www\.)?([a-zA-Z0-9-]+\.[a-zA-Z]{2,})(?:/[^\s]*)?');
+      final match = urlPattern.firstMatch(userMessage);
+      
+      if (match != null) {
+        String url = match.group(0)!;
+        // Ensure URL has protocol
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          url = 'https://$url';
+        }
+        toolsNeeded.add('screenshot');
+        toolParams['screenshot'] = {'url': url};
+      } else {
+        // Try to extract domain name and construct URL
+        final domainPattern = RegExp(r'([a-zA-Z0-9-]+\.[a-zA-Z]{2,})');
+        final domainMatch = domainPattern.firstMatch(userMessage);
+        if (domainMatch != null) {
+          final domain = domainMatch.group(0)!;
+          toolsNeeded.add('screenshot');
+          toolParams['screenshot'] = {'url': 'https://$domain'};
+        }
+      }
+    }
+
     // Determine if web search is needed
     if (message.contains('search') || message.contains('find') || 
         message.contains('latest') || message.contains('news') ||
@@ -217,17 +246,6 @@ class AgentService extends ChangeNotifier {
       }
       
       toolParams['web_search'] = {'query': query.trim()};
-    }
-
-    // Determine if screenshot is needed
-    if (message.contains('screenshot') || message.contains('capture') ||
-        message.contains('take a picture') || message.contains('show me')) {
-      final urlPattern = RegExp(r'https?://[^\s]+');
-      final match = urlPattern.firstMatch(userMessage);
-      if (match != null) {
-        toolsNeeded.add('screenshot');
-        toolParams['screenshot'] = {'url': match.group(0)!};
-      }
     }
 
     // Determine if page analysis is needed
@@ -253,8 +271,8 @@ class AgentService extends ChangeNotifier {
   String _classifyIntent(String message) {
     final msg = message.toLowerCase();
     
-    if (msg.contains('search') || msg.contains('find')) return 'search';
     if (msg.contains('screenshot') || msg.contains('capture')) return 'screenshot';
+    if (msg.contains('search') || msg.contains('find')) return 'search';
     if (msg.contains('analyze') || msg.contains('extract')) return 'analysis';
     if (msg.contains('explain') || msg.contains('what is')) return 'explanation';
     if (msg.contains('help') || msg.contains('how to')) return 'assistance';
@@ -271,6 +289,22 @@ class AgentService extends ChangeNotifier {
     // Build context from tool results
     StringBuffer responseBuffer = StringBuffer();
     
+    if (toolResults.containsKey('screenshot')) {
+      final screenshotResult = toolResults['screenshot'] as Map<String, dynamic>;
+      if (screenshotResult['success'] == true) {
+        responseBuffer.writeln('📸 **Screenshot captured successfully!**\n');
+        responseBuffer.writeln('🌐 **Website:** ${screenshotResult['url']}\n');
+        responseBuffer.writeln('✅ I\'ve successfully taken a screenshot of the website. The screenshot has been captured and processed.\n');
+        
+        if (screenshotResult['description'] != null) {
+          responseBuffer.writeln('📝 **Description:** ${screenshotResult['description']}\n');
+        }
+      } else {
+        responseBuffer.writeln('❌ **Screenshot failed**\n');
+        responseBuffer.writeln('Sorry, I couldn\'t capture the screenshot. ${screenshotResult['error'] ?? 'Unknown error occurred.'}\n');
+      }
+    }
+
     if (toolResults.containsKey('web_search')) {
       final searchResults = toolResults['web_search'] as Map<String, dynamic>;
       if (searchResults['success'] == true) {
@@ -287,14 +321,6 @@ class AgentService extends ChangeNotifier {
       }
     }
 
-    if (toolResults.containsKey('screenshot')) {
-      final screenshotResult = toolResults['screenshot'] as Map<String, dynamic>;
-      if (screenshotResult['success'] == true) {
-        responseBuffer.writeln('📸 **Screenshot captured successfully**\n');
-        responseBuffer.writeln('URL: ${screenshotResult['url']}\n');
-      }
-    }
-
     if (toolResults.containsKey('analyze_page')) {
       final analysisResult = toolResults['analyze_page'] as Map<String, dynamic>;
       if (analysisResult['success'] == true) {
@@ -303,64 +329,26 @@ class AgentService extends ChangeNotifier {
       }
     }
 
-    // If no tools were used, generate a direct response
+    // If no tools were used, provide helpful message
     if (toolResults.isEmpty) {
       responseBuffer.writeln('I understand you\'re asking: "${userMessage}"\n');
-      responseBuffer.writeln('Let me help you with that directly.');
+      responseBuffer.writeln('Let me help you with that directly.\n');
+      
+      // Add contextual help based on the request
+      final intent = analysis['intent'];
+      if (intent == 'screenshot') {
+        responseBuffer.writeln('💡 **Tip:** To take a screenshot, make sure to include a website URL (like "take screenshot of google.com")');
+      }
     }
 
-    // Add AI-generated response context
-    final aiResponse = await _getAIResponse(userMessage, toolResults, model);
-    if (aiResponse.isNotEmpty) {
-      responseBuffer.writeln('\n---\n');
-      responseBuffer.writeln(aiResponse);
-    }
+    // Add completion message
+    responseBuffer.writeln('\n---\n');
+    responseBuffer.writeln('✨ **Task completed!** How else can I help you?');
 
     return responseBuffer.toString();
   }
 
-  Future<String> _getAIResponse(String userMessage, Map<String, dynamic> toolResults, String model) async {
-    try {
-      final payload = {
-        'model': model,
-        'messages': [
-          {
-            'role': 'system',
-            'content': 'You are AhamAI, a helpful AI assistant. Provide clear, concise responses based on the user\'s question and any tool results provided.',
-          },
-          {
-            'role': 'user',
-            'content': userMessage,
-          },
-          if (toolResults.isNotEmpty) {
-            'role': 'system',
-            'content': 'Additional context from tools: ${jsonEncode(toolResults)}',
-          },
-        ],
-        'max_tokens': 500,
-        'temperature': 0.7,
-      };
 
-      final response = await http.post(
-        Uri.parse('https://api.openai.com/v1/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_API_KEY', // Replace with actual API key
-        },
-        body: jsonEncode(payload),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['choices'][0]['message']['content'] ?? '';
-      }
-    } catch (e) {
-      debugPrint('AI response error: $e');
-    }
-
-    // Fallback response
-    return 'I\'ve processed your request using the available tools. ${toolResults.isNotEmpty ? 'Please check the results above.' : 'How else can I help you?'}';
-  }
 
   Future<String> _handleError(String userMessage, String model, String error) async {
     return 'I apologize, but I encountered an error while processing your request: $error\n\nLet me try to help you in a different way. Could you please rephrase your question?';
@@ -442,26 +430,36 @@ class AgentService extends ChangeNotifier {
   }
 
   Future<Map<String, dynamic>> _executeScreenshot(Map<String, dynamic> params) async {
-    final url = params['url'] as String;
+    final url = params['url'] as String? ?? '';
     final width = params['width'] as int? ?? 1200;
     final height = params['height'] as int? ?? 800;
 
     try {
-      // Simulate screenshot functionality
-      await Future.delayed(Duration(milliseconds: 800));
+      // Use a free screenshot API service
+      final screenshotUrl = 'https://api.screenshotmachine.com/?key=demo&url=${Uri.encodeComponent(url)}&dimension=${width}x$height';
       
-      return {
-        'success': true,
-        'url': url,
-        'width': width,
-        'height': height,
-        'message': 'Screenshot captured successfully',
-        'timestamp': DateTime.now().toIso8601String(),
-      };
+      final response = await http.get(Uri.parse(screenshotUrl));
+      
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'url': url,
+          'screenshot_url': screenshotUrl,
+          'width': width,
+          'height': height,
+          'description': 'Screenshot captured successfully for $url',
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Screenshot service returned status ${response.statusCode}',
+          'url': url,
+        };
+      }
     } catch (e) {
       return {
         'success': false,
-        'error': e.toString(),
+        'error': 'Failed to capture screenshot: $e',
         'url': url,
       };
     }
