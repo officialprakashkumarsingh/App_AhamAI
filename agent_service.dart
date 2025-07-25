@@ -294,10 +294,17 @@ class AgentService extends ChangeNotifier {
       if (screenshotResult['success'] == true) {
         responseBuffer.writeln('📸 **Screenshot captured successfully!**\n');
         responseBuffer.writeln('🌐 **Website:** ${screenshotResult['url']}\n');
-        responseBuffer.writeln('✅ I\'ve successfully taken a screenshot of the website. The screenshot has been captured and processed.\n');
+        
+        // Include the screenshot URL directly for viewing
+        final screenshotUrl = screenshotResult['screenshot_url'];
+        responseBuffer.writeln('🖼️ **Screenshot Preview:**');
+        responseBuffer.writeln('![Screenshot](${screenshotUrl})\n');
+        responseBuffer.writeln('🔗 **Direct Link:** ${screenshotUrl}\n');
+        
+        responseBuffer.writeln('✅ I\'ve successfully taken a screenshot of the website using WordPress preview. The screenshot is displayed above and ready to view.\n');
         
         if (screenshotResult['description'] != null) {
-          responseBuffer.writeln('📝 **Description:** ${screenshotResult['description']}\n');
+          responseBuffer.writeln('📝 **Details:** ${screenshotResult['description']}\n');
         }
       } else {
         responseBuffer.writeln('❌ **Screenshot failed**\n');
