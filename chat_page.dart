@@ -195,18 +195,47 @@ class ChatPageState extends State<ChatPage> {
 
     setState(() => _awaitingReply = true);
 
-    // Check if agent mode is enabled
+    // Check if agent mode is enabled – stream response directly in the chat bubble
     if (_agentService.isAgentMode) {
       try {
         final agentResponse = await _agentService.processAgentRequest(prompt, widget.selectedModel);
+
+        // Create a streaming bot message placeholder
+        var botMessage = Message.bot('', isStreaming: true);
+        final botMessageIndex = _messages.length;
         setState(() {
-          _messages.add(agentResponse);
-          _awaitingReply = false;
+          _messages.add(botMessage);
         });
-        _scrollToBottom();
-        
-        // Update memory with the agent conversation
-        _updateConversationMemory(prompt, agentResponse.text);
+
+        String accumulatedText = '';
+
+        // Simulate real-time streaming by revealing the response text character-by-character
+        for (int i = 0; i < agentResponse.text.length; i++) {
+          accumulatedText += agentResponse.text[i];
+          if (!mounted) break;
+          await Future.delayed(const Duration(milliseconds: 8));
+          setState(() {
+            _messages[botMessageIndex] = botMessage.copyWith(
+              text: accumulatedText,
+              isStreaming: true,
+            );
+          });
+          _scrollToBottom();
+        }
+
+        // Finalise the streamed message
+        if (mounted) {
+          setState(() {
+            _messages[botMessageIndex] = botMessage.copyWith(
+              text: accumulatedText,
+              isStreaming: false,
+            );
+            _awaitingReply = false;
+          });
+        }
+
+        // Update memory with the completed conversation
+        _updateConversationMemory(prompt, accumulatedText);
         return;
       } catch (e) {
         // Fall back to regular chat if agent fails
@@ -885,12 +914,7 @@ class _MessageBubbleState extends State<_MessageBubble> with TickerProviderState
             _ThoughtsPanel(thoughts: widget.message.thoughts),
           if (isBot && widget.message.codes.isNotEmpty)
             _CodePanel(codes: widget.message.codes),
-          // Agent processing panel for bot messages with agent data
-          if (isBot && widget.message.agentProcessingData.isNotEmpty)
-            AgentProcessingPanel(
-              agentService: widget.agentService,
-              processingResults: widget.message.agentProcessingData,
-            ),
+          // Agent processing panel removed – agent output will now stream directly in the chat bubble
           if (isUser)
             GestureDetector(
               onTap: _toggleUserActions,
