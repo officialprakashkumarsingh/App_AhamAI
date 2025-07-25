@@ -708,15 +708,15 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
             child: ScaleTransition(
               scale: _fabAnimation,
               child: Container(
-                width: 36,
-                height: 36,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
-                  color: _isTemporaryChatMode ? const Color(0xFF000000) : const Color(0xFFEAE9E5),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: const Color(0xFFC4C4C4),
-                    width: 1,
-                  ),
+                  color: Colors.transparent, // Remove background
+                  borderRadius: BorderRadius.circular(21),
+                  border: _isTemporaryChatMode ? Border.all(
+                    color: const Color(0xFF000000),
+                    width: 2,
+                  ) : null,
                 ),
                 child: Material(
                   color: Colors.transparent,
@@ -727,11 +727,11 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
                         _isTemporaryChatMode = !_isTemporaryChatMode;
                       });
                     },
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(21),
                     child: FaIcon(
                       FontAwesomeIcons.mask,
-                      color: _isTemporaryChatMode ? const Color(0xFFFFFFFF) : const Color(0xFFA3A3A3),
-                      size: 18,
+                      color: _isTemporaryChatMode ? const Color(0xFF000000) : const Color(0xFFA3A3A3),
+                      size: 22,
                     ),
                   ),
                 ),
@@ -744,18 +744,11 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
             child: ScaleTransition(
               scale: _fabAnimation,
               child: Container(
-                width: 36,
-                height: 36,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF000000),
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF000000).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(21),
                 ),
                 child: Material(
                   color: Colors.transparent,
@@ -764,11 +757,11 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
                       HapticFeedback.mediumImpact();
                       _saveAndStartNewChat();
                     },
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(21),
                     child: const FaIcon(
-                      FontAwesomeIcons.plus,
-                      color: Color(0xFFFFFFFF),
-                      size: 18,
+                      FontAwesomeIcons.commentDots,
+                      color: Color(0xFFA3A3A3),
+                      size: 22,
                     ),
                   ),
                 ),
