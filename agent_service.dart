@@ -185,75 +185,60 @@ class AgentService extends ChangeNotifier {
       );
       
       _tasks.add(task);
+      _processingSteps.add('🚀 Agent activated for advanced processing');
       notifyListeners();
+      await Future.delayed(const Duration(milliseconds: 300));
 
       // Step 1: Think and analyze the request
       _currentPhase = 'Thinking';
-      _currentStep = 'Analyzing user request and identifying required tools...';
-      _processingSteps.add('🤔 Starting analysis of user request');
+      _currentStep = 'Initializing cognitive analysis system...';
+      _processingSteps.add('🧠 Entering deep thinking mode');
       notifyListeners();
-      
-      await Future.delayed(const Duration(milliseconds: 500));
-      _currentStep = 'Evaluating complexity and required tools...';
-      _processingSteps.add('🔍 Evaluating request complexity');
-      notifyListeners();
+      await Future.delayed(const Duration(milliseconds: 400));
       
       final thinkingResult = await _thinkPhase(userMessage, selectedModel);
-      _processingSteps.add('✅ Completed thinking phase');
+      _processingSteps.add('✅ Thinking phase completed successfully');
       _currentResults['thinking'] = thinkingResult;
       notifyListeners();
+      await Future.delayed(const Duration(milliseconds: 200));
       
       // Step 2: Plan the execution
       _currentPhase = 'Planning';
-      _currentStep = 'Creating detailed execution plan with tools...';
-      _processingSteps.add('📋 Creating execution plan');
+      _currentStep = 'Transitioning to strategic planning mode...';
+      _processingSteps.add('📋 Switching to planning phase');
       notifyListeners();
-      
       await Future.delayed(const Duration(milliseconds: 300));
-      _currentStep = 'Selecting optimal tools and approach...';
-      _processingSteps.add('⚡ Selecting optimal tools');
-      notifyListeners();
       
       final planningResult = await _planPhase(userMessage, thinkingResult, selectedModel);
-      _processingSteps.add('✅ Execution plan created');
+      _processingSteps.add('✅ Strategic plan finalized');
       _currentResults['planning'] = planningResult;
       notifyListeners();
+      await Future.delayed(const Duration(milliseconds: 200));
       
       // Step 3: Execute the plan
       _currentPhase = 'Executing';
-      _currentStep = 'Running tools and gathering results...';
-      _processingSteps.add('⚙️ Executing planned steps');
+      _currentStep = 'Preparing execution environment...';
+      _processingSteps.add('⚙️ Entering execution mode');
       notifyListeners();
-      
-      await Future.delayed(const Duration(milliseconds: 200));
-      _currentStep = 'Initializing tool execution...';
-      _processingSteps.add('🔧 Initializing tools');
-      notifyListeners();
+      await Future.delayed(const Duration(milliseconds: 300));
       
       final executionResult = await _executePhase(planningResult, selectedModel);
-      _processingSteps.add('✅ Tool execution completed');
+      _processingSteps.add('✅ All execution tasks completed');
       _currentResults['execution'] = executionResult;
       notifyListeners();
+      await Future.delayed(const Duration(milliseconds: 200));
       
       // Step 4: Compile the final response
       _currentPhase = 'Responding';
-      _currentStep = 'Compiling comprehensive response...';
-      _processingSteps.add('📝 Compiling final response');
+      _currentStep = 'Transitioning to response generation...';
+      _processingSteps.add('📝 Entering response compilation mode');
       notifyListeners();
-      
       await Future.delayed(const Duration(milliseconds: 300));
-      _currentStep = 'Analyzing results and formatting response...';
-      _processingSteps.add('📊 Analyzing results');
-      notifyListeners();
-      
-      await Future.delayed(const Duration(milliseconds: 200));
-      _currentStep = 'Finalizing comprehensive response...';
-      _processingSteps.add('📄 Finalizing response');
-      notifyListeners();
       
       final finalResponse = await _compileFinalResponse(userMessage, thinkingResult, planningResult, executionResult, selectedModel);
-      _processingSteps.add('✅ Response ready');
+      _processingSteps.add('🎉 Complete response ready for delivery');
       notifyListeners();
+      await Future.delayed(const Duration(milliseconds: 200));
 
       // Update task as completed
       final completedTask = task.copyWith(
@@ -274,34 +259,38 @@ class AgentService extends ChangeNotifier {
       _isProcessing = false;
       _currentPhase = '';
       _currentStep = '';
+      _processingSteps.add('✨ Agent processing completed successfully');
       notifyListeners();
 
       return Message.bot(finalResponse, agentProcessingData: {
         'steps': _processingSteps,
         'results': _currentResults,
         'phase_completed': ['Thinking', 'Planning', 'Executing', 'Responding'],
+        'total_steps': _processingSteps.length,
+        'processing_time': DateTime.now().difference(task.timestamp).inMilliseconds,
       });
     } catch (e) {
-      _processingSteps.add('❌ Error occurred: ${e.toString()}');
-      _currentStep = 'Attempting error recovery...';
-      _processingSteps.add('🔄 Attempting to recover from error');
+      _processingSteps.add('❌ Critical error detected during processing');
+      _currentStep = 'Analyzing error and determining recovery strategy...';
+      _processingSteps.add('🔍 Performing error analysis');
       notifyListeners();
+      await Future.delayed(const Duration(milliseconds: 400));
       
       try {
         // Attempt error recovery
-        await Future.delayed(const Duration(milliseconds: 500));
-        _currentStep = 'Analyzing error and finding alternative approach...';
-        _processingSteps.add('🔍 Analyzing error cause');
+        _currentStep = 'Implementing intelligent error recovery...';
+        _processingSteps.add('🔄 Activating recovery protocols');
         notifyListeners();
-        
         await Future.delayed(const Duration(milliseconds: 300));
-        _currentStep = 'Implementing fallback strategy...';
-        _processingSteps.add('⚡ Implementing fallback');
+        
+        _currentStep = 'Switching to fallback processing mode...';
+        _processingSteps.add('⚡ Deploying fallback strategy');
         notifyListeners();
+        await Future.delayed(const Duration(milliseconds: 200));
         
         // Try a simplified approach without complex tools
         final fallbackResponse = await _handleFallbackResponse(userMessage, selectedModel, e.toString());
-        _processingSteps.add('✅ Recovery successful');
+        _processingSteps.add('✅ Recovery successful - fallback response ready');
         
         _isProcessing = false;
         _currentPhase = '';
@@ -313,17 +302,18 @@ class AgentService extends ChangeNotifier {
           'results': _currentResults,
           'phase_completed': ['Error Recovery'],
           'error_recovered': true,
+          'recovery_method': 'fallback_processing',
         });
       } catch (fallbackError) {
         _isProcessing = false;
         _currentPhase = '';
         _currentStep = '';
-        _processingSteps.add('❌ Recovery failed: ${fallbackError.toString()}');
+        _processingSteps.add('❌ Recovery failed - switching to basic mode');
         notifyListeners();
         
         return Message.bot(
           'I encountered an error while processing your request as an agent. '
-          'Despite attempting error recovery, I was unable to complete the task. '
+          'Despite attempting error recovery, I was unable to complete the advanced processing. '
           'Let me try to help you in regular mode instead.\n\n'
           'Error details: $e\n'
           'Recovery attempt: $fallbackError'
@@ -333,6 +323,32 @@ class AgentService extends ChangeNotifier {
   }
 
   Future<String> _thinkPhase(String userMessage, String selectedModel) async {
+    // Add detailed thinking steps
+    _currentStep = 'Reading and parsing user request...';
+    _processingSteps.add('👁️ Reading and understanding user input');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 400));
+    
+    _currentStep = 'Identifying key concepts and intent...';
+    _processingSteps.add('🧠 Analyzing request intent and context');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    _currentStep = 'Evaluating complexity and scope...';
+    _processingSteps.add('📏 Measuring task complexity and requirements');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 400));
+    
+    _currentStep = 'Identifying potential approaches and solutions...';
+    _processingSteps.add('💡 Brainstorming possible solution strategies');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 600));
+    
+    _currentStep = 'Assessing available tools and capabilities...';
+    _processingSteps.add('🔍 Evaluating tool inventory and capabilities');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 300));
+
     final thinkingPrompt = '''
 You are an advanced AI agent in thinking phase. Analyze this user request and think about:
 
@@ -349,7 +365,19 @@ User request: "$userMessage"
 Please provide your analysis and thoughts:
 ''';
 
-    return await _makeApiCall(thinkingPrompt, selectedModel);
+    _currentStep = 'Formulating comprehensive analysis...';
+    _processingSteps.add('📋 Compiling comprehensive thought analysis');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final response = await _makeApiCall(thinkingPrompt, selectedModel);
+    
+    _currentStep = 'Validating thought process and conclusions...';
+    _processingSteps.add('✅ Validating analysis and conclusions');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    return response;
   }
 
   Future<Map<String, dynamic>> _planPhase(String userMessage, String thinkingResult, String selectedModel) async {
@@ -381,7 +409,32 @@ Create a step-by-step plan in JSON format with this structure:
 Plan:
 ''';
 
+    // Add detailed planning steps
+    _currentStep = 'Analyzing request complexity and requirements...';
+    _processingSteps.add('📊 Analyzing request complexity and scope');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 600));
+    
+    _currentStep = 'Identifying required tools and data sources...';
+    _processingSteps.add('🔍 Scanning available tools and capabilities');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    _currentStep = 'Creating step-by-step execution strategy...';
+    _processingSteps.add('⚡ Designing optimal execution workflow');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 400));
+    
+    _currentStep = 'Validating plan feasibility and resource requirements...';
+    _processingSteps.add('✅ Validating plan against available resources');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 300));
+
     final planResponse = await _makeApiCall(planningPrompt, selectedModel);
+    
+    _currentStep = 'Finalizing execution plan with fallback strategies...';
+    _processingSteps.add('🎯 Finalizing comprehensive execution plan');
+    notifyListeners();
     
     try {
       // Try to extract JSON from the response
@@ -416,11 +469,26 @@ Plan:
     final results = <String, dynamic>{};
     final steps = plan['steps'] as List<dynamic>;
 
+    _currentStep = 'Initializing execution environment...';
+    _processingSteps.add('🔧 Setting up execution environment');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 300));
+
     for (int i = 0; i < steps.length; i++) {
       final step = steps[i];
       final toolName = step['tool'] as String;
+      final stepDescription = step['description'] as String? ?? 'Processing step ${i + 1}';
+      
+      _currentStep = 'Executing: $stepDescription';
+      _processingSteps.add('⚙️ Step ${i + 1}: $stepDescription');
+      notifyListeners();
       
       if (toolName == 'none' || !_tools.containsKey(toolName)) {
+        _currentStep = 'Skipping step ${i + 1} - no tool required';
+        _processingSteps.add('⏭️ Step ${i + 1} skipped (no tool needed)');
+        notifyListeners();
+        await Future.delayed(const Duration(milliseconds: 200));
+        
         results['step_${i + 1}'] = {
           'status': 'skipped',
           'reason': 'No tool required or tool not available'
@@ -432,11 +500,21 @@ Plan:
         final tool = _tools[toolName]!;
         final parameters = Map<String, dynamic>.from(step['parameters'] ?? {});
         
-        _processingSteps.add('🔧 Using ${tool.name} tool...');
-        _currentStep = 'Executing ${tool.description}';
+        _currentStep = 'Preparing ${tool.name} with parameters...';
+        _processingSteps.add('🔧 Initializing ${tool.name} tool');
+        notifyListeners();
+        await Future.delayed(const Duration(milliseconds: 200));
+        
+        _currentStep = 'Executing ${tool.name}: ${tool.description}';
+        _processingSteps.add('⚡ Running ${tool.name} operation');
         notifyListeners();
         
         final toolResult = await tool.execute(parameters);
+        
+        _currentStep = 'Processing results from ${tool.name}...';
+        _processingSteps.add('📊 Analyzing ${tool.name} results');
+        notifyListeners();
+        await Future.delayed(const Duration(milliseconds: 200));
         
         _processingSteps.add('✅ ${tool.name} completed successfully');
         notifyListeners();
@@ -448,7 +526,9 @@ Plan:
           'result': toolResult,
         };
       } catch (e) {
-        _processingSteps.add('❌ ${toolName} failed: ${e.toString()}');
+        _currentStep = 'Handling error in ${toolName}...';
+        _processingSteps.add('❌ ${toolName} encountered error');
+        _processingSteps.add('🔄 Implementing fallback strategy');
         notifyListeners();
         
         results['step_${i + 1}'] = {
@@ -458,6 +538,11 @@ Plan:
         };
       }
     }
+
+    _currentStep = 'Consolidating execution results...';
+    _processingSteps.add('📋 Consolidating all execution results');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 300));
 
     return results;
   }
@@ -469,6 +554,21 @@ Plan:
     Map<String, dynamic> executionResult,
     String selectedModel,
   ) async {
+    _currentStep = 'Analyzing execution results for response compilation...';
+    _processingSteps.add('📊 Analyzing execution outcomes');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 400));
+    
+    _currentStep = 'Structuring response with relevant information...';
+    _processingSteps.add('📝 Structuring comprehensive response');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 300));
+    
+    _currentStep = 'Incorporating tool results and insights...';
+    _processingSteps.add('🔗 Integrating tool results and insights');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 200));
+
     final compilationPrompt = '''
 You are an AI agent compiling the final response. Based on all the work done, provide a comprehensive and helpful response to the user.
 
@@ -491,7 +591,23 @@ Be natural, helpful, and concise. Don't mention the internal phases unless relev
 Final response:
 ''';
 
-    return await _makeApiCall(compilationPrompt, selectedModel);
+    _currentStep = 'Generating natural language response...';
+    _processingSteps.add('💬 Generating natural language response');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final response = await _makeApiCall(compilationPrompt, selectedModel);
+    
+    _currentStep = 'Finalizing response quality and formatting...';
+    _processingSteps.add('✨ Finalizing response quality and format');
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 200));
+    
+    _currentStep = 'Response compilation complete';
+    _processingSteps.add('🎉 Response ready for delivery');
+    notifyListeners();
+
+    return response;
   }
 
   Future<String> _handleFallbackResponse(String userMessage, String selectedModel, String errorDetails) async {

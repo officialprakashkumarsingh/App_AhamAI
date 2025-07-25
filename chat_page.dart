@@ -1183,7 +1183,7 @@ class _InputBar extends StatelessWidget {
             margin: EdgeInsets.fromLTRB(20, isEditing ? 0 : 16, 20, 0),
             decoration: BoxDecoration(
               color: Colors.white, // White input background
-              borderRadius: BorderRadius.circular(20), // Rounded from both sides
+              borderRadius: BorderRadius.circular(24), // Fully rounded border on both sides
               border: Border.all(
                 color: const Color(0xFFEAE9E5),
                 width: 1,
@@ -1234,7 +1234,7 @@ class _InputBar extends StatelessWidget {
                       ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, 
+                        horizontal: 20, // Increased padding for better rounded appearance
                         vertical: 12 // Reduced from 18
                       ),
                     ),
@@ -1243,7 +1243,7 @@ class _InputBar extends StatelessWidget {
                 
                 // Send/Stop button
                 Padding(
-                  padding: const EdgeInsets.only(right: 8, bottom: 6), // Adjusted padding
+                  padding: const EdgeInsets.only(right: 12, bottom: 6), // Adjusted padding
                   child: GestureDetector(
                     onTap: awaitingReply ? onStop : onSend,
                     child: AnimatedContainer(
@@ -1253,7 +1253,7 @@ class _InputBar extends StatelessWidget {
                         color: awaitingReply 
                             ? Colors.red.withOpacity(0.1)
                             : const Color(0xFF000000),
-                        borderRadius: BorderRadius.circular(10), // Smaller radius
+                        borderRadius: BorderRadius.circular(12), // Smaller radius
                       ),
                       child: Icon(
                         awaitingReply ? Icons.stop_circle : Icons.arrow_upward_rounded,
@@ -1282,7 +1282,7 @@ class _InputBar extends StatelessWidget {
                       // Enhanced Agent Icon with animated border
                       _AnimatedModeIcon(
                         isActive: agentService.isAgentMode,
-                        icon: Icons.auto_awesome_rounded,
+                        icon: Icons.psychology_rounded, // Better professional agent icon
                         label: 'Agent',
                         onTap: () {
                           HapticFeedback.lightImpact();
@@ -1295,7 +1295,7 @@ class _InputBar extends StatelessWidget {
                       // Web Search Icon with animated border
                       _AnimatedModeIcon(
                         isActive: webSearchMode,
-                        icon: Icons.search_rounded,
+                        icon: Icons.travel_explore_rounded, // Better professional search icon
                         label: 'Search',
                         onTap: () {
                           HapticFeedback.lightImpact();
@@ -1310,7 +1310,7 @@ class _InputBar extends StatelessWidget {
                         isActive: uploadedImagePath != null,
                         icon: uploadedImagePath != null 
                             ? Icons.close_rounded 
-                            : Icons.image_rounded,
+                            : Icons.camera_alt_rounded, // Better professional image icon
                         label: 'Image',
                         onTap: () {
                           HapticFeedback.lightImpact();

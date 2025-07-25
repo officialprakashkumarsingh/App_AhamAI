@@ -691,7 +691,7 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
                 height: 36,
                 child: const Center(
                   child: Icon(
-                    Icons.menu_rounded,
+                    Icons.menu_open_rounded, // Better professional menu icon
                     color: Color(0xFF000000),
                     size: 24,
                   ),
@@ -728,7 +728,7 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
                     },
                     borderRadius: BorderRadius.circular(18),
                     child: Icon(
-                      Icons.visibility_off_rounded,
+                      Icons.hide_source_rounded, // Better professional temporary chat icon
                       color: _isTemporaryChatMode ? const Color(0xFFFFFFFF) : const Color(0xFFA3A3A3),
                       size: 20,
                     ),
