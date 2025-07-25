@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'chat_page.dart';
 import 'characters_page.dart';
@@ -690,10 +691,10 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
                 width: 36,
                 height: 36,
                 child: const Center(
-                  child: Icon(
-                    Icons.menu_open_rounded, // Better professional menu icon
+                  child: FaIcon(
+                    FontAwesomeIcons.bars,
                     color: Color(0xFF000000),
-                    size: 24,
+                    size: 20,
                   ),
                 ),
               ),
@@ -727,10 +728,10 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
                       });
                     },
                     borderRadius: BorderRadius.circular(18),
-                    child: Icon(
-                      Icons.hide_source_rounded, // Better professional temporary chat icon
+                    child: FaIcon(
+                      FontAwesomeIcons.mask,
                       color: _isTemporaryChatMode ? const Color(0xFFFFFFFF) : const Color(0xFFA3A3A3),
-                      size: 20,
+                      size: 18,
                     ),
                   ),
                 ),
@@ -764,10 +765,10 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
                       _saveAndStartNewChat();
                     },
                     borderRadius: BorderRadius.circular(18),
-                    child: const Icon(
-                      Icons.add_rounded,
+                    child: const FaIcon(
+                      FontAwesomeIcons.plus,
                       color: Color(0xFFFFFFFF),
-                      size: 20,
+                      size: 18,
                     ),
                   ),
                 ),
