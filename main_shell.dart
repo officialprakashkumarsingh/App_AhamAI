@@ -747,15 +747,8 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF000000),
+                  color: Colors.transparent,
                   borderRadius: BorderRadius.circular(21),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF000000).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
                 child: Material(
                   color: Colors.transparent,
@@ -766,8 +759,8 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
                     },
                     borderRadius: BorderRadius.circular(21),
                     child: const FaIcon(
-                      FontAwesomeIcons.plus,
-                      color: Color(0xFFFFFFFF),
+                      FontAwesomeIcons.commentDots,
+                      color: Color(0xFFA3A3A3),
                       size: 22,
                     ),
                   ),
