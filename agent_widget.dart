@@ -177,7 +177,7 @@ class _AgentProcessingPanelState extends State<AgentProcessingPanel> with Ticker
 
   String _getCurrentPhaseIcon() {
     final phase = widget.agentService.currentPhase.toLowerCase();
-    if (phase.contains('thinking')) return '🤔';
+    if (phase.contains('thinking')) return '🧠';
     if (phase.contains('planning')) return '📋';
     if (phase.contains('executing')) return '⚙️';
     if (phase.contains('responding')) return '📝';
@@ -191,6 +191,30 @@ class _AgentProcessingPanelState extends State<AgentProcessingPanel> with Ticker
     if (phase.contains('executing')) return const Color(0xFF10B981);
     if (phase.contains('responding')) return const Color(0xFFF59E0B);
     return const Color(0xFF000000);
+  }
+
+  String _getPhaseDescription() {
+    final phase = widget.agentService.currentPhase.toLowerCase();
+    if (phase.contains('thinking')) return 'Analyzing request and understanding context';
+    if (phase.contains('planning')) return 'Creating strategic execution plan';
+    if (phase.contains('executing')) return 'Running tools and gathering data';
+    if (phase.contains('responding')) return 'Compiling comprehensive response';
+    return 'Processing your request';
+  }
+
+  String _getPhaseProgress() {
+    if (!widget.agentService.isProcessing) {
+      return 'Completed';
+    }
+    
+    final totalSteps = widget.agentService.processingSteps.length;
+    final phase = widget.agentService.currentPhase.toLowerCase();
+    
+    if (phase.contains('thinking')) return 'Step $totalSteps • Thinking';
+    if (phase.contains('planning')) return 'Step $totalSteps • Planning';
+    if (phase.contains('executing')) return 'Step $totalSteps • Executing';
+    if (phase.contains('responding')) return 'Step $totalSteps • Responding';
+    return 'Step $totalSteps • Processing';
   }
 
   List<String> _getDisplaySteps() {
@@ -295,41 +319,68 @@ class _AgentProcessingPanelState extends State<AgentProcessingPanel> with Ticker
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Phase title
-                          Text(
-                            widget.agentService.isProcessing 
-                                ? widget.agentService.currentPhase.isNotEmpty 
-                                    ? widget.agentService.currentPhase
-                                    : 'Agent Processing'
-                                : 'Agent Analysis Complete',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: widget.agentService.isProcessing 
-                                  ? _getPhaseColor()
-                                  : const Color(0xFF374151),
-                            ),
+                          // Phase title with progress
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  widget.agentService.isProcessing 
+                                      ? widget.agentService.currentPhase.isNotEmpty 
+                                          ? widget.agentService.currentPhase
+                                          : 'Agent Processing'
+                                      : 'Agent Analysis Complete',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: widget.agentService.isProcessing 
+                                        ? _getPhaseColor()
+                                        : const Color(0xFF374151),
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                _getPhaseProgress(),
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: widget.agentService.isProcessing 
+                                      ? _getPhaseColor().withOpacity(0.7)
+                                      : const Color(0xFF10B981),
+                                ),
+                              ),
+                            ],
                           ),
                           
                           const SizedBox(height: 2),
                           
-                          // Current step or summary
+                          // Phase description
                           Text(
                             widget.agentService.isProcessing
-                                ? widget.agentService.currentStep.isNotEmpty 
-                                    ? widget.agentService.currentStep
-                                    : 'Processing your request...'
-                                : '${_getDisplaySteps().length} steps completed',
+                                ? _getPhaseDescription()
+                                : '${_getDisplaySteps().length} steps completed successfully',
                             style: GoogleFonts.inter(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: const Color(0xFF6B7280),
-                              fontStyle: widget.agentService.isProcessing 
-                                  ? FontStyle.italic 
-                                  : FontStyle.normal,
+                              fontStyle: FontStyle.normal,
                             ),
-                            maxLines: 2,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          
+                          // Current step details (only if processing)
+                          if (widget.agentService.isProcessing && widget.agentService.currentStep.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              widget.agentService.currentStep,
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                color: const Color(0xFF9CA3AF),
+                                fontStyle: FontStyle.italic,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ],
                       ),
                     ),
