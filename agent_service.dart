@@ -435,8 +435,8 @@ class AgentService extends ChangeNotifier {
     final height = params['height'] as int? ?? 800;
 
     try {
-      // Use a free screenshot API service
-      final screenshotUrl = 'https://api.screenshotmachine.com/?key=demo&url=${Uri.encodeComponent(url)}&dimension=${width}x$height';
+      // Use WordPress.com mshots API for screenshots
+      final screenshotUrl = 'https://s0.wp.com/mshots/v1/${Uri.encodeComponent(url)}?w=$width&h=$height';
       
       final response = await http.get(Uri.parse(screenshotUrl));
       
@@ -447,12 +447,13 @@ class AgentService extends ChangeNotifier {
           'screenshot_url': screenshotUrl,
           'width': width,
           'height': height,
-          'description': 'Screenshot captured successfully for $url',
+          'description': 'Screenshot captured successfully for $url using WordPress preview',
+          'service': 'WordPress mshots',
         };
       } else {
         return {
           'success': false,
-          'error': 'Screenshot service returned status ${response.statusCode}',
+          'error': 'WordPress screenshot service returned status ${response.statusCode}',
           'url': url,
         };
       }
