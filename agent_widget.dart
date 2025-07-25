@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'agent_service.dart';
 
 class AgentStatusWidget extends StatefulWidget {
@@ -70,9 +71,7 @@ class _AgentStatusWidgetState extends State<AgentStatusWidget> with TickerProvid
 
 }
 
-
-
-// Agent Processing Panel similar to Code Panel
+// Enhanced Agent Processing Panel integrated into message UI
 class AgentProcessingPanel extends StatefulWidget {
   final AgentService agentService;
   final Map<String, dynamic> processingResults;
@@ -88,17 +87,19 @@ class AgentProcessingPanel extends StatefulWidget {
 }
 
 class _AgentProcessingPanelState extends State<AgentProcessingPanel> with TickerProviderStateMixin {
-  bool _isExpanded = false;
+  bool _isExpanded = true; // Start expanded for better visibility
   late AnimationController _expandController;
   late Animation<double> _expandAnimation;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
     _expandController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
     _expandAnimation = CurvedAnimation(
@@ -107,19 +108,32 @@ class _AgentProcessingPanelState extends State<AgentProcessingPanel> with Ticker
     );
     
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
     _pulseAnimation = Tween<double>(
-      begin: 0.3,
+      begin: 0.4,
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _pulseController,
       curve: Curves.easeInOut,
     ));
     
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOut,
+    );
+    
     // Listen to agent service changes
     widget.agentService.addListener(_onAgentServiceChanged);
+    
+    // Start animations
+    _expandController.forward();
+    _fadeController.forward();
     
     // Start pulse animation if processing
     if (widget.agentService.isProcessing) {
@@ -132,6 +146,7 @@ class _AgentProcessingPanelState extends State<AgentProcessingPanel> with Ticker
     widget.agentService.removeListener(_onAgentServiceChanged);
     _expandController.dispose();
     _pulseController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
   
@@ -160,16 +175,22 @@ class _AgentProcessingPanelState extends State<AgentProcessingPanel> with Ticker
     });
   }
 
-  String _getProcessingPreview() {
-    if (widget.agentService.isProcessing) {
-      return '${widget.agentService.currentPhase}: ${widget.agentService.currentStep}';
-    } else if (widget.agentService.processingSteps.isNotEmpty) {
-      return 'Processing completed (${widget.agentService.processingSteps.length} steps)';
-    } else if (widget.processingResults['steps'] != null) {
-      final steps = widget.processingResults['steps'] as List<dynamic>? ?? [];
-      return 'Agent processing completed (${steps.length} steps)';
-    }
-    return 'Agent processing data available';
+  String _getCurrentPhaseIcon() {
+    final phase = widget.agentService.currentPhase.toLowerCase();
+    if (phase.contains('thinking')) return '🤔';
+    if (phase.contains('planning')) return '📋';
+    if (phase.contains('executing')) return '⚙️';
+    if (phase.contains('responding')) return '📝';
+    return '🤖';
+  }
+
+  Color _getPhaseColor() {
+    final phase = widget.agentService.currentPhase.toLowerCase();
+    if (phase.contains('thinking')) return const Color(0xFF6366F1);
+    if (phase.contains('planning')) return const Color(0xFF8B5CF6);
+    if (phase.contains('executing')) return const Color(0xFF10B981);
+    if (phase.contains('responding')) return const Color(0xFFF59E0B);
+    return const Color(0xFF000000);
   }
 
   List<String> _getDisplaySteps() {
@@ -192,237 +213,288 @@ class _AgentProcessingPanelState extends State<AgentProcessingPanel> with Ticker
       return const SizedBox.shrink();
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAE9E5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with toggle
-          InkWell(
-            onTap: _toggleExpansion,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 16,
-                    color: const Color(0xFF000000),
-                  ),
-                  const SizedBox(width: 8),
-                                      Expanded(
-                      child: Text(
-                        _isExpanded 
-                            ? widget.agentService.isProcessing 
-                                ? 'Agent Processing (${widget.agentService.processingSteps.length} steps) - ${widget.agentService.currentPhase}'
-                                : 'Agent Processing Complete (${widget.agentService.processingSteps.length} steps)'
-                            : widget.agentService.isProcessing
-                                ? widget.agentService.currentStep.isNotEmpty 
-                                    ? widget.agentService.currentStep
-                                    : 'Processing...'
-                                : _getProcessingPreview(),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: widget.agentService.isProcessing 
-                              ? const Color(0xFF000000)
-                              : const Color(0xFFA3A3A3),
-                          fontWeight: widget.agentService.isProcessing 
-                              ? FontWeight.w600
-                              : FontWeight.w500,
-                        ),
-                        maxLines: _isExpanded ? 1 : 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  const SizedBox(width: 8),
-                  if (widget.agentService.isProcessing)
-                    const SizedBox(
-                      width: 12,
-                      height: 12,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF000000)),
-                      ),
-                    )
-                  else
-                    AnimatedRotation(
-                      turns: _isExpanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 300),
-                      child: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        size: 18,
-                        color: const Color(0xFF000000),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Container(
+        margin: const EdgeInsets.only(left: 12, top: 8, bottom: 8),
+        constraints: const BoxConstraints(maxWidth: 340),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.white,
+              const Color(0xFFF8F9FA),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          // Expandable content
-          SizeTransition(
-            sizeFactor: _expandAnimation,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Current status if processing
-                  if (widget.agentService.isProcessing) ...[
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: widget.agentService.isProcessing 
+                ? _getPhaseColor().withOpacity(0.3)
+                : const Color(0xFFE5E7EB),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: widget.agentService.isProcessing 
+                  ? _getPhaseColor().withOpacity(0.1)
+                  : Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Enhanced Header with current phase
+            InkWell(
+              onTap: _toggleExpansion,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Animated phase icon
                     AnimatedBuilder(
                       animation: _pulseAnimation,
                       builder: (context, child) {
-                        return Container(
-                          padding: const EdgeInsets.all(12),
-                          margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Color.lerp(
-                                const Color(0xFFE0E0E0),
-                                const Color(0xFF000000),
-                                _pulseAnimation.value,
-                              )!,
-                              width: 1,
+                        return Transform.scale(
+                          scale: widget.agentService.isProcessing 
+                              ? 1.0 + (_pulseAnimation.value * 0.1)
+                              : 1.0,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: widget.agentService.isProcessing 
+                                  ? _getPhaseColor().withOpacity(0.1)
+                                  : const Color(0xFFEAE9E5),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: widget.agentService.isProcessing 
+                                    ? _getPhaseColor()
+                                    : const Color(0xFFD1D5DB),
+                                width: 1,
+                              ),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF000000).withOpacity(_pulseAnimation.value * 0.1),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                            child: Center(
+                              child: Text(
+                                _getCurrentPhaseIcon(),
+                                style: const TextStyle(fontSize: 14),
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color.lerp(
-                                      const Color(0xFFA3A3A3),
-                                      const Color(0xFF000000),
-                                      _pulseAnimation.value,
-                                    )!,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      widget.agentService.currentPhase.isNotEmpty 
-                                          ? 'Phase: ${widget.agentService.currentPhase}'
-                                          : 'Processing...',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF000000),
-                                      ),
-                                    ),
-                                    if (widget.agentService.currentStep.isNotEmpty) ...[
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        widget.agentService.currentStep,
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Color(0xFFA3A3A3),
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         );
                       },
                     ),
-                  ],
-                                     // Processing steps - show current steps if processing, or saved steps from results
-                  ..._getDisplaySteps().map((step) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          step.split(' ').first, // Get the emoji
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            step.substring(step.indexOf(' ') + 1), // Get text after emoji
-                            style: const TextStyle(
-                              fontSize: 12,
-                              height: 1.4,
-                              color: Color(0xFF000000),
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )).toList(),
-                  // Results preview
-                  if (widget.processingResults.isNotEmpty) ...[
-                    const SizedBox(height: 8),
                     
-
+                    const SizedBox(width: 12),
                     
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF4F3F0),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Results Summary:',
-                            style: TextStyle(
-                              fontSize: 11,
+                          // Phase title
+                          Text(
+                            widget.agentService.isProcessing 
+                                ? widget.agentService.currentPhase.isNotEmpty 
+                                    ? widget.agentService.currentPhase
+                                    : 'Agent Processing'
+                                : 'Agent Analysis Complete',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF000000),
+                              color: widget.agentService.isProcessing 
+                                  ? _getPhaseColor()
+                                  : const Color(0xFF374151),
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          ...widget.processingResults.entries.map((entry) => Padding(
-                            padding: const EdgeInsets.only(bottom: 2),
-                            child: Text(
-                              '• ${entry.key}: ${entry.value.toString().length > 50 ? entry.value.toString().substring(0, 50) + "..." : entry.value.toString()}',
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: Color(0xFFA3A3A3),
-                              ),
+                          
+                          const SizedBox(height: 2),
+                          
+                          // Current step or summary
+                          Text(
+                            widget.agentService.isProcessing
+                                ? widget.agentService.currentStep.isNotEmpty 
+                                    ? widget.agentService.currentStep
+                                    : 'Processing your request...'
+                                : '${_getDisplaySteps().length} steps completed',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: const Color(0xFF6B7280),
+                              fontStyle: widget.agentService.isProcessing 
+                                  ? FontStyle.italic 
+                                  : FontStyle.normal,
                             ),
-                          )).toList(),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
                     ),
+                    
+                    const SizedBox(width: 8),
+                    
+                    // Progress indicator or expand button
+                    if (widget.agentService.isProcessing)
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(_getPhaseColor()),
+                        ),
+                      )
+                    else
+                      AnimatedRotation(
+                        turns: _isExpanded ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 20,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
                   ],
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+            
+            // Expandable content with steps
+            SizeTransition(
+              sizeFactor: _expandAnimation,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Divider(
+                      color: Color(0xFFE5E7EB),
+                      height: 1,
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Real-time processing steps
+                    ..._getDisplaySteps().asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final step = entry.value;
+                      final isLatest = index == _getDisplaySteps().length - 1;
+                      
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isLatest && widget.agentService.isProcessing
+                              ? _getPhaseColor().withOpacity(0.05)
+                              : const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isLatest && widget.agentService.isProcessing
+                                ? _getPhaseColor().withOpacity(0.2)
+                                : const Color(0xFFE5E7EB),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Step icon/emoji
+                            Container(
+                              width: 20,
+                              height: 20,
+                              child: Center(
+                                child: Text(
+                                  step.split(' ').first, // Get the emoji
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ),
+                            
+                            const SizedBox(width: 8),
+                            
+                            Expanded(
+                              child: Text(
+                                step.contains(' ') 
+                                    ? step.substring(step.indexOf(' ') + 1)
+                                    : step,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  height: 1.3,
+                                  color: const Color(0xFF374151),
+                                  fontWeight: isLatest && widget.agentService.isProcessing
+                                      ? FontWeight.w500
+                                      : FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                            
+                            // Status indicator
+                            if (isLatest && widget.agentService.isProcessing)
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: _getPhaseColor(),
+                                  shape: BoxShape.circle,
+                                ),
+                              )
+                            else
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF10B981),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    
+                    // Phase summary if completed
+                    if (!widget.agentService.isProcessing && widget.processingResults.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: const Color(0xFF10B981).withOpacity(0.2),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: Color(0xFF10B981),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Agent analysis completed successfully',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF065F46),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
