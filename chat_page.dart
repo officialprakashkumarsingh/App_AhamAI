@@ -1206,6 +1206,7 @@ class _InputBar extends StatelessWidget {
           // Main input container (smaller height)
           Container(
             margin: EdgeInsets.fromLTRB(20, isEditing ? 0 : 16, 20, 0),
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: Colors.white, // White input background
               borderRadius: BorderRadius.circular(24), // Fully rounded border on both sides
@@ -1258,6 +1259,11 @@ class _InputBar extends StatelessWidget {
                         height: 1.4,
                       ),
                       border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 20, // Increased padding for better rounded appearance
                         vertical: 12 // Reduced from 18
