@@ -8,6 +8,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'models.dart';
 import 'character_service.dart';
 import 'agent_service.dart';
@@ -1279,48 +1280,48 @@ class _InputBar extends StatelessWidget {
                   // Action icons row
                   Row(
                     children: [
-                      // Enhanced Agent Icon with animated border
-                      _AnimatedModeIcon(
-                        isActive: agentService.isAgentMode,
-                        icon: Icons.psychology_rounded, // Better professional agent icon
-                        label: 'Agent',
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          agentService.toggleAgentMode();
-                        },
-                      ),
-                      
-                      const SizedBox(width: 12),
-                      
-                      // Web Search Icon with animated border
-                      _AnimatedModeIcon(
-                        isActive: webSearchMode,
-                        icon: Icons.travel_explore_rounded, // Better professional search icon
-                        label: 'Search',
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          onToggleWebSearch();
-                        },
-                      ),
-                      
-                      const SizedBox(width: 12),
-                      
-                      // Image Upload Icon with animated border
-                      _AnimatedModeIcon(
-                        isActive: uploadedImagePath != null,
-                        icon: uploadedImagePath != null 
-                            ? Icons.close_rounded 
-                            : Icons.camera_alt_rounded, // Better professional image icon
-                        label: 'Image',
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          if (uploadedImagePath != null) {
-                            onClearImage();
-                          } else {
-                            onImageUpload();
-                          }
-                        },
-                      ),
+                                              // Enhanced Agent Icon - clean design
+                        _AnimatedModeIcon(
+                          isActive: agentService.isAgentMode,
+                          icon: FontAwesomeIcons.brain,
+                          label: 'Agent',
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            agentService.toggleAgentMode();
+                          },
+                        ),
+                        
+                        const SizedBox(width: 12),
+                        
+                                                 // Web Search Icon - clean design
+                         _AnimatedModeIcon(
+                           isActive: webSearchMode,
+                           icon: FontAwesomeIcons.search,
+                           label: 'Search',
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            onToggleWebSearch();
+                          },
+                        ),
+                        
+                        const SizedBox(width: 12),
+                        
+                        // Image Upload Icon - clean design
+                        _AnimatedModeIcon(
+                          isActive: uploadedImagePath != null,
+                          icon: uploadedImagePath != null 
+                              ? FontAwesomeIcons.times
+                              : FontAwesomeIcons.camera,
+                          label: 'Image',
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            if (uploadedImagePath != null) {
+                              onClearImage();
+                            } else {
+                              onImageUpload();
+                            }
+                          },
+                        ),
                       
                       const Spacer(),
                     ],
@@ -1787,52 +1788,87 @@ class _AnimatedModeIcon extends StatefulWidget {
   State<_AnimatedModeIcon> createState() => _AnimatedModeIconState();
 }
 
-class _AnimatedModeIconState extends State<_AnimatedModeIcon> {
+class _AnimatedModeIconState extends State<_AnimatedModeIcon> 
+    with SingleTickerProviderStateMixin {
+  
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onTapDown: (_) => _animationController.forward(),
+      onTapUp: (_) => _animationController.reverse(),
+      onTapCancel: () => _animationController.reverse(),
       onTap: widget.onTap,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(
-                  widget.icon,
-                  color: const Color(0xFF000000), // Black icons
-                  size: 22,
-                ),
-                // Active dot indicator
-                if (widget.isActive)
-                  Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF000000),
-                        shape: BoxShape.circle,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Clean icon with subtle active state
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: widget.isActive 
+                          ? const Color(0xFF6366F1).withOpacity(0.1)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: FaIcon(
+                        widget.icon,
+                        color: widget.isActive 
+                            ? const Color(0xFF6366F1)
+                            : const Color(0xFF6B7280),
+                        size: 18,
                       ),
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              widget.label,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF000000), // Black text
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.label,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.w500,
+                      color: widget.isActive 
+                          ? const Color(0xFF6366F1)
+                          : const Color(0xFF6B7280),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
